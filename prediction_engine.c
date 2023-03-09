@@ -3,6 +3,7 @@
 //
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include "prediction_engine.h"
 #include "move_logic.h"
 
