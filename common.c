@@ -12,9 +12,20 @@ void coord_to_pos(struct pos* pos, struct coord* coord)
 	pos->p[1] = coord->c[0] - 'A';
 }
 
+void pos_to_coord(struct coord* coord, struct pos* pos)
+{
+	coord->c[0] = 'A' + pos->p[1];
+	coord->c[1] = '1' + 7 - pos->p[0];
+}
+
 struct piece* get_piece(struct board* board, struct pos* pos)
 {
 	return board->squares[pos->p[0]][pos->p[1]].piece;
+}
+
+enum color get_other_player(enum color current_player)
+{
+	return current_player == WHITE ? BLACK : WHITE;
 }
 
 struct board* board_copy(struct board* board)

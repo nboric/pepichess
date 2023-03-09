@@ -31,31 +31,37 @@ struct piece* create_piece(enum color color, enum piece_id type, struct coord co
 		piece->name = "pawn";
 		piece->symbol = color == WHITE ? "♙" : "♟";
 		piece->valid_moves_update_func = move_validation_pawn;
+		piece->capture_score = 1;
 		break;
 	case ROOK:
 		piece->name = "rook";
 		piece->symbol = color == WHITE ? "♖" : "♜";
 		piece->valid_moves_update_func = move_validation_rook;
+		piece->capture_score = 5;
 		break;
 	case KNIGHT:
 		piece->name = "knight";
 		piece->symbol = color == WHITE ? "♘" : "♞";
 		piece->valid_moves_update_func = move_validation_knight;
+		piece->capture_score = 3;
 		break;
 	case BISHOP:
 		piece->name = "bishop";
 		piece->symbol = color == WHITE ? "♗" : "♝";
 		piece->valid_moves_update_func = move_validation_bishop;
+		piece->capture_score = 3.25;
 		break;
 	case QUEEN:
 		piece->name = "queen";
 		piece->symbol = color == WHITE ? "♕" : "♛";
 		piece->valid_moves_update_func = move_validation_queen;
+		piece->capture_score = 9;
 		break;
 	case KING:
 		piece->name = "king";
 		piece->symbol = color == WHITE ? "♔" : "♚";
 		piece->valid_moves_update_func = move_validation_king;
+		piece->capture_score = 40;
 		break;
 	}
 	piece->has_moved = 0;

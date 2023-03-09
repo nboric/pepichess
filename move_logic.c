@@ -44,7 +44,7 @@ void update_is_giving_check(struct board* board, struct piece* piece)
 	}
 }
 
-void move_piece(struct board* board, struct move* move)
+double move_piece(struct board* board, struct move_coord* move)
 {
 	struct pos pos_from, pos_to;
 	coord_to_pos(&pos_from, &move->from);
@@ -65,7 +65,9 @@ void move_piece(struct board* board, struct move* move)
 	{
 		piece_to->is_captured = 1;
 		reset_valid_moves(piece_to);
+		return piece_to->capture_score;
 	}
+	return 0;
 }
 
 void update_valid_moves(struct board* board)
@@ -78,10 +80,6 @@ void update_valid_moves(struct board* board)
 			if ((piece = board->squares[i][j].piece) != NULL)
 			{
 				reset_valid_moves(piece);
-				if (piece->is_captured)
-				{
-					continue;
-				}
 				if (piece->valid_moves_update_func != NULL)
 				{
 					piece->valid_moves_update_func(board, piece);
@@ -92,7 +90,7 @@ void update_valid_moves(struct board* board)
 	}
 }
 
-int would_be_in_check(struct game_status* status, struct board* board, struct move* move)
+int move_puts_own_king_in_check(struct board* board, enum color current_player, struct move_coord* move)
 {
 	int result = 0;
 	struct board* board2 = board_copy(board);
@@ -100,7 +98,7 @@ int would_be_in_check(struct game_status* status, struct board* board, struct mo
 	move_piece(board2, move);
 	update_valid_moves(board2);
 
-	int other_player = status->current_player == WHITE ? BLACK : WHITE;
+	int other_player = get_other_player(current_player);
 
 	for (int i = 0; i < 8; i++)
 	{
@@ -109,7 +107,7 @@ int would_be_in_check(struct game_status* status, struct board* board, struct mo
 			struct piece* piece;
 			if ((piece = board2->squares[i][j].piece) != NULL)
 			{
-				if (piece->color == other_player && !piece->is_captured && piece->is_giving_check)
+				if (piece->color == other_player && piece->is_giving_check)
 				{
 					result = 1;
 				}
@@ -121,7 +119,7 @@ int would_be_in_check(struct game_status* status, struct board* board, struct mo
 	return result;
 }
 
-int validate_move(struct game_status* status, struct board* board, struct move* move)
+int validate_move(struct game_status* status, struct board* board, struct move_coord* move)
 {
 	struct pos pos_from;
 	struct pos pos_to;
@@ -162,7 +160,7 @@ int validate_move(struct game_status* status, struct board* board, struct move* 
 			.c[1], move->to.c[0], move->to.c[1]);
 		return 0;
 	}
-	if (would_be_in_check(status, board, move))
+	if (move_puts_own_king_in_check(board, status->current_player, move))
 	{
 		printf("Can't move %s at %c%c to %c%c, king would be in check\n", piece_from->name, move->from.c[0], move->from
 			.c[1], move->to.c[0], move->to.c[1]);

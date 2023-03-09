@@ -3,6 +3,7 @@
 #include "common.h"
 #include "move_logic.h"
 #include "init.h"
+#include "prediction_engine.h"
 
 void print_square(struct square* square)
 {
@@ -50,9 +51,9 @@ void print_board(struct board* board)
 	printf("\n");
 }
 
-struct move get_input()
+struct move_coord get_input()
 {
-	struct move result;
+	struct move_coord result;
 
 	char c1, c2;
 	char i1, i2;
@@ -75,8 +76,10 @@ int main()
 
 	while (!game_status.ended)
 	{
+		struct move_coord best_move = predict_best_move(&game_status);
+		printf("Hint: I would play %c%c->%c%c\n", best_move.from.c[0], best_move.from.c[1], best_move.to.c[0], best_move.to.c[1]);
 		int move_valid = 0;
-		struct move move;
+		struct move_coord move;
 		while (!move_valid)
 		{
 			print_board(board);
@@ -86,7 +89,7 @@ int main()
 		}
 		move_piece(board, &move);
 		update_valid_moves(board);
-		game_status.current_player = game_status.current_player == WHITE ? BLACK : WHITE;
+		game_status.current_player = get_other_player(game_status.current_player);
 	}
 	return 0;
 }

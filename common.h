@@ -53,6 +53,7 @@ struct piece
 	void (* valid_moves_update_func)(struct board* board, struct piece* piece);
 	char* name;
 	char* symbol;
+	double capture_score;
 	int has_moved;
 	int is_in_check;
 	int is_giving_check;
@@ -72,13 +73,22 @@ struct game_status
 	struct player players[2];
 };
 
-struct move
+struct move_coord
 {
 	struct coord from;
 	struct coord to;
 };
 
+struct move_pos
+{
+	struct pos from;
+	struct pos to;
+};
+
+enum color get_other_player(enum color current_player);
+
 void coord_to_pos(struct pos* pos, struct coord* coord);
+void pos_to_coord(struct coord* coord, struct pos* pos);
 struct piece* get_piece(struct board* board, struct pos* pos);
 
 struct board* board_copy(struct board* board);
