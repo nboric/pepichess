@@ -66,26 +66,15 @@ struct move_list*
 predict_best_move_rec(struct move_list* node, enum color current_player, int max_depth)
 {
 	struct move_list* n = node;
-	for (int i = 0; i < 8; i++)
+	for (struct ll_node* ln = node->board->active_pieces[current_player]->next; ln != NULL; ln = ln->next)
 	{
-		for (int j = 0; j < 8; j++)
-		{
-			struct piece* piece;
-			if ((piece = node->board->squares[i][j].piece) != NULL)
-			{
-				if (piece->color == current_player)
-				{
-					n = add_all_moves(n, piece);
-				}
-			}
-		}
+		struct piece* piece = ln->value;
+		n = add_all_moves(n, piece);
 	}
 
 	enum color next_player = get_other_player(current_player);
 	double max_score = INT32_MIN;
 	struct move_list* winner = NULL;
-
-	// printf("S%c%d,", current_player == WHITE ? 'w' : 'b', max_depth);
 
 	for (n = node->next; n != NULL; n = n->next)
 	{
@@ -96,13 +85,10 @@ predict_best_move_rec(struct move_list* node, enum color current_player, int max
 		struct move_coord move_coord = (struct move_coord){ coord_from, coord_to };
 		n->predicted_score = move_piece(n->board, &move_coord);
 
-		// printf("%c%d,%c%c->%c%c,%.3f,", current_player == WHITE ? 'w' : 'b', max_depth, move_coord.from.c[0], move_coord.from.c[1], move_coord.to.c[0], move_coord.to.c[1], n->predicted_score);
-
 		update_valid_moves(n->board);
 		if (max_depth > 0)
 		{
 			struct move_list* next_turn_move_list = move_list_node_create(n->board);
-			// printf(",%c%c->%c%c:\n", move_coord.from.c[0], move_coord.from.c[1], move_coord.to.c[0], move_coord.to.c[1]);
 			struct move_list* next_move = predict_best_move_rec(next_turn_move_list, next_player, max_depth - 1);
 			if (next_move != NULL)
 			{
@@ -113,7 +99,6 @@ predict_best_move_rec(struct move_list* node, enum color current_player, int max
 				n->predicted_score = 40;
 			}
 			move_list_node_free(next_turn_move_list);
-			// printf("%c%d,%c%c->%c%c,%.3f,", current_player == WHITE ? 'w' : 'b', max_depth, move_coord.from.c[0], move_coord.from.c[1], move_coord.to.c[0], move_coord.to.c[1], n->predicted_score);
 		}
 		if (n->predicted_score > max_score)
 		{
@@ -126,12 +111,6 @@ predict_best_move_rec(struct move_list* node, enum color current_player, int max
 	{
 		return NULL;
 	}
-	// printf("E%c%d ", current_player == WHITE ? 'w' : 'b', max_depth);
-	struct coord coord_from;
-	struct coord coord_to;
-	pos_to_coord(&coord_from, &winner->move.from);
-	pos_to_coord(&coord_to, &winner->move.to);
-	// printf("winner: %c%c->%c%c,%.3f\n", coord_from.c[0], coord_from.c[1], coord_to.c[0], coord_to.c[1], winner->predicted_score);
 	return winner;
 }
 

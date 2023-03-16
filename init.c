@@ -15,6 +15,7 @@ void add_pieces_to_board(struct board* board, struct player* player)
 	{
 		struct pos* pos = &player->pieces[i]->pos;
 		board->squares[pos->p[0]][pos->p[1]].piece = player->pieces[i];
+		ll_add(board->active_pieces[player->id], player->pieces[i]);
 	}
 	update_valid_moves(board);
 }
@@ -130,7 +131,8 @@ void init_player(struct player* player, int color)
 		}
 	}
 }
-struct board* create_board()
+
+struct board* board_create()
 {
 	struct board* b = malloc(sizeof(struct board));
 	enum color color = WHITE;
@@ -146,5 +148,7 @@ struct board* create_board()
 		color++;
 		color %= 2;
 	}
+	b->active_pieces[0] = ll_create();
+	b->active_pieces[1] = ll_create();
 	return b;
 }

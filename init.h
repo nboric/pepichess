@@ -10,6 +10,6 @@
 void add_pieces_to_board(struct board* board, struct player* player);
 struct piece* create_piece(enum color color, enum piece_id type, struct coord coord);
 void init_player(struct player* player, int color);
-struct board* create_board();
+struct board* board_create();
 
 #endif //_INIT_H_

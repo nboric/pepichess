@@ -5,6 +5,8 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#include "util.h"
+
 enum color
 {
 	WHITE,
@@ -40,6 +42,7 @@ struct square
 struct board
 {
 	struct square squares[8][8];
+	struct ll_node* active_pieces[2];
 };
 
 struct piece
@@ -48,7 +51,6 @@ struct piece
 	enum piece_id type;
 	struct pos pos;
 	struct coord coord;
-	char is_captured;
 	char valid_moves[8][8];
 	void (* valid_moves_update_func)(struct board* board, struct piece* piece);
 	char* name;

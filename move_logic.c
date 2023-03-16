@@ -63,30 +63,30 @@ double move_piece(struct board* board, struct move_coord* move)
 
 	if (piece_to != NULL)
 	{
-		piece_to->is_captured = 1;
-		reset_valid_moves(piece_to);
+		struct ll_node* piece_node = ll_find(board->active_pieces[piece_to->color], piece_to);
+		ll_remove(piece_node);
 		return piece_to->capture_score;
 	}
 	return 0;
 }
 
+void update_valid_moves_piece(void *value, void *data)
+{
+	struct piece* piece = value;
+	struct board* board = data;
+	reset_valid_moves(piece);
+	if (piece->valid_moves_update_func != NULL)
+	{
+		piece->valid_moves_update_func(board, piece);
+	}
+	update_is_giving_check(board, piece);
+}
+
 void update_valid_moves(struct board* board)
 {
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < 2; i++)
 	{
-		for (int j = 0; j < 8; j++)
-		{
-			struct piece* piece;
-			if ((piece = board->squares[i][j].piece) != NULL)
-			{
-				reset_valid_moves(piece);
-				if (piece->valid_moves_update_func != NULL)
-				{
-					piece->valid_moves_update_func(board, piece);
-				}
-				update_is_giving_check(board, piece);
-			}
-		}
+		ll_apply(board->active_pieces[i], update_valid_moves_piece, board);
 	}
 }
 
@@ -100,18 +100,13 @@ int move_puts_own_king_in_check(struct board* board, enum color current_player, 
 
 	int other_player = get_other_player(current_player);
 
-	for (int i = 0; i < 8; i++)
+	for (struct ll_node* n = board2->active_pieces[other_player]->next; n != NULL; n = n->next)
 	{
-		for (int j = 0; j < 8; j++)
+		struct piece* piece = n->value;
+		if (piece->is_giving_check)
 		{
-			struct piece* piece;
-			if ((piece = board2->squares[i][j].piece) != NULL)
-			{
-				if (piece->color == other_player && piece->is_giving_check)
-				{
-					result = 1;
-				}
-			}
+			result = 1;
+			break;
 		}
 	}
 

@@ -28,35 +28,38 @@ enum color get_other_player(enum color current_player)
 	return current_player == WHITE ? BLACK : WHITE;
 }
 
+void* piece_copy(void* piece)
+{
+	struct piece* new = malloc(sizeof(struct piece));
+	memcpy(new, piece, sizeof(struct piece));
+	return new;
+}
+
+void piece_add_to_board(void* value, void* data)
+{
+	struct piece* piece = value;
+	struct board* board = data;
+	board->squares[piece->pos.p[0]][piece->pos.p[1]].piece = piece;
+}
+
 struct board* board_copy(struct board* board)
 {
 	struct board* board2 = malloc(sizeof(struct board));
-	for (int i = 0; i < 8; i++)
+	memcpy(board2, board, sizeof(struct board));
+
+	board2->active_pieces[0] = ll_copy(board->active_pieces[0], piece_copy);
+	board2->active_pieces[1] = ll_copy(board->active_pieces[1], piece_copy);
+
+	for (int i = 0; i < 2; i++)
 	{
-		for (int j = 0; j < 8; j++)
-		{
-			memcpy(&board2->squares[i][j], &board->squares[i][j], sizeof(struct square));
-			if (board->squares[i][j].piece != NULL)
-			{
-				board2->squares[i][j].piece = malloc(sizeof(struct piece));
-				memcpy(board2->squares[i][j].piece, board->squares[i][j].piece, sizeof(struct piece));
-			}
-		}
+		ll_apply(board2->active_pieces[i], piece_add_to_board, board2);
 	}
 	return board2;
 }
 
 void board_free(struct board* board)
 {
-	for (int i = 0; i < 8; i++)
-	{
-		for (int j = 0; j < 8; j++)
-		{
-			if (board->squares[i][j].piece != NULL)
-			{
-				free(board->squares[i][j].piece);
-			}
-		}
-	}
+	ll_free(board->active_pieces[0], free);
+	ll_free(board->active_pieces[1], free);
 	free(board);
 }

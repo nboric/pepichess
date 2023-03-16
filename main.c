@@ -67,7 +67,7 @@ struct move_coord get_input()
 
 int main()
 {
-	struct board* board = create_board();
+	struct board* board = board_create();
 	struct game_status game_status = { .ended = 0, .current_player = WHITE, .board = board };
 	init_player(&game_status.players[0], WHITE);
 	add_pieces_to_board(board, &game_status.players[0]);
