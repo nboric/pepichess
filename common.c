@@ -63,3 +63,18 @@ void board_free(struct board* board)
 	ll_free(board->active_pieces[1], free);
 	free(board);
 }
+
+double calc_score(struct board* board, enum color current_player)
+{
+	double score = 0;
+	for (int i = 0; i < 2; i++)
+	{
+		int sign = i == current_player ? 1 : -1;
+		for (struct ll_node* n = board->active_pieces[i]->next; n != NULL; n = n->next)
+		{
+			struct piece* piece = n->value;
+			score += sign * piece->capture_score;
+		}
+	}
+	return score;
+}

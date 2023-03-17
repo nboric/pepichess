@@ -96,4 +96,6 @@ struct piece* get_piece(struct board* board, struct pos* pos);
 struct board* board_copy(struct board* board);
 void board_free(struct board* board);
 
+double calc_score(struct board* board, enum color current_player);
+
 #endif //_COMMON_H_

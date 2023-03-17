@@ -17,10 +17,7 @@ int is_within_boundaries(struct pos* pos)
 
 void reset_valid_moves(struct piece* piece)
 {
-	for (int i = 0; i < 8; i++)
-	{
-		memset(piece->valid_moves[i], 0, sizeof(piece->valid_moves[i]));
-	}
+	memset(piece->valid_moves, 0, sizeof(piece->valid_moves));
 	piece->is_giving_check = 0;
 	piece->is_in_check = 0;
 }

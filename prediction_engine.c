@@ -83,7 +83,9 @@ predict_best_move_rec(struct move_list* node, enum color current_player, int max
 		pos_to_coord(&coord_from, &n->move.from);
 		pos_to_coord(&coord_to, &n->move.to);
 		struct move_coord move_coord = (struct move_coord){ coord_from, coord_to };
-		n->predicted_score = move_piece(n->board, &move_coord);
+		move_piece(n->board, &move_coord);
+
+		n->predicted_score = calc_score(n->board, current_player);
 
 		update_valid_moves(n->board);
 		if (max_depth > 0)
@@ -92,7 +94,7 @@ predict_best_move_rec(struct move_list* node, enum color current_player, int max
 			struct move_list* next_move = predict_best_move_rec(next_turn_move_list, next_player, max_depth - 1);
 			if (next_move != NULL)
 			{
-				n->predicted_score -= next_move->predicted_score;
+				n->predicted_score = -next_move->predicted_score;
 			}
 			else
 			{
@@ -102,7 +104,6 @@ predict_best_move_rec(struct move_list* node, enum color current_player, int max
 		}
 		if (n->predicted_score > max_score)
 		{
-			// printf("%c%d,%c%c->%c%c,%.3f,", current_player == WHITE ? 'w' : 'b', max_depth, move_coord.from.c[0], move_coord.from.c[1], move_coord.to.c[0], move_coord.to.c[1], n->predicted_score);
 			max_score = n->predicted_score;
 			winner = n;
 		}
