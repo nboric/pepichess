@@ -7,33 +7,13 @@
 #include "prediction_engine.h"
 #include "move_logic.h"
 
-struct move_list
+struct scored_move
 {
-	struct board* board;
 	struct move_pos move;
 	double predicted_score;
-	struct move_list* next;
 };
 
-struct move_list* move_list_node_create(struct board* board)
-{
-	struct move_list* node = malloc(sizeof(struct move_list));
-	node->next = NULL;
-	node->board = board_copy(board);
-	return node;
-}
-
-void move_list_node_free(struct move_list* node)
-{
-	board_free(node->board);
-	if (node->next != NULL)
-	{
-		move_list_node_free(node->next);
-	}
-	free(node);
-}
-
-struct move_list* add_all_moves(struct move_list* node, struct piece* piece)
+void add_all_moves(struct ll_node* move_list, struct board* board, struct piece* piece)
 {
 	struct pos pos_from = piece->pos;
 	struct coord coord_from;
@@ -48,80 +28,101 @@ struct move_list* add_all_moves(struct move_list* node, struct piece* piece)
 				struct coord coord_to;
 				pos_to_coord(&coord_to, &pos_to);
 				struct move_coord move_coord = (struct move_coord){ coord_from, coord_to };
-				if (move_puts_own_king_in_check(node->board, piece->color, &move_coord))
+				if (move_puts_own_king_in_check(board, piece->color, &move_coord))
 				{
 					continue;
 				}
-				struct move_list* new_node = move_list_node_create(node->board);
-				new_node->move = (struct move_pos){ pos_from, pos_to };
-				node->next = new_node;
-				node = new_node;
+				struct move_pos* move = malloc(sizeof(struct move_pos));
+				*move = (struct move_pos){ pos_from, pos_to };
+				ll_add(move_list, move);
 			}
 		}
 	}
-	return node;
 }
 
-struct move_list*
-predict_best_move_rec(struct move_list* node, enum color current_player, int max_depth)
+struct scored_move*
+predict_best_move_rec(struct board* board, struct move_pos previous_move, enum color current_player, double alpha, double beta, int max_depth)
 {
-	struct move_list* n = node;
-	for (struct ll_node* ln = node->board->active_pieces[current_player]->next; ln != NULL; ln = ln->next)
+	struct scored_move* result;
+	if (max_depth == 0)
+	{
+		result = malloc(sizeof(struct scored_move));
+		result->move = previous_move;
+		result->predicted_score = calc_score(board, current_player);
+		return result;
+	}
+
+	struct ll_node* move_list = ll_create();
+
+	for (struct ll_node* ln = board->active_pieces[current_player]->next; ln != NULL; ln = ln->next)
 	{
 		struct piece* piece = ln->value;
-		n = add_all_moves(n, piece);
+		add_all_moves(move_list, board, piece);
 	}
 
 	enum color next_player = get_other_player(current_player);
-	double max_score = INT32_MIN;
-	struct move_list* winner = NULL;
+	struct move_pos* winner = NULL;
 
-	for (n = node->next; n != NULL; n = n->next)
+	double best_score = INT32_MIN;
+
+	for (struct ll_node* n = move_list->next; n != NULL; n = n->next)
 	{
+		struct move_pos* move = n->value;
 		struct coord coord_from;
 		struct coord coord_to;
-		pos_to_coord(&coord_from, &n->move.from);
-		pos_to_coord(&coord_to, &n->move.to);
+		pos_to_coord(&coord_from, &move->from);
+		pos_to_coord(&coord_to, &move->to);
 		struct move_coord move_coord = (struct move_coord){ coord_from, coord_to };
-		move_piece(n->board, &move_coord);
+		struct board* board2 = board_copy(board);
+		move_piece(board2, &move_coord);
 
-		n->predicted_score = calc_score(n->board, current_player);
+		update_valid_moves(board2);
+		struct scored_move* next_move = predict_best_move_rec(board2, *move, next_player, -beta, -alpha, max_depth - 1);
+		board_free(board2);
 
-		update_valid_moves(n->board);
-		if (max_depth > 0)
+		double score;
+		if (next_move != NULL)
 		{
-			struct move_list* next_turn_move_list = move_list_node_create(n->board);
-			struct move_list* next_move = predict_best_move_rec(next_turn_move_list, next_player, max_depth - 1);
-			if (next_move != NULL)
-			{
-				n->predicted_score = -next_move->predicted_score;
-			}
-			else
-			{
-				n->predicted_score = 40;
-			}
-			move_list_node_free(next_turn_move_list);
+			score = -next_move->predicted_score;
 		}
-		if (n->predicted_score > max_score)
+		else
 		{
-			max_score = n->predicted_score;
-			winner = n;
+			score = 40;
+		}
+		free(next_move);
+		if (score > best_score)
+		{
+			best_score = score;
+			winner = move;
+		}
+		if (best_score > alpha)
+		{
+			alpha = best_score;
+		}
+		if (alpha >= beta)
+		{
+			break;
 		}
 	}
-	if (winner == NULL) // no valid moves
+	struct scored_move* scored_winner = NULL;
+	if (winner != NULL)
 	{
-		return NULL;
+		scored_winner = malloc(sizeof(struct scored_move));
+		scored_winner->move = *winner;
+		scored_winner->predicted_score = best_score;
+		return scored_winner;
 	}
-	return winner;
+	ll_free(move_list, free);
+	return scored_winner;
 }
 
 struct move_coord predict_best_move(struct game_status* status)
 {
 	struct move_coord result;
-	struct move_list* move_list = move_list_node_create(status->board);
-	struct move_list* best_move = predict_best_move_rec(move_list, status->current_player, 3);
+	struct move_pos empty_move;
+	struct scored_move* best_move = predict_best_move_rec(status->board, empty_move, status->current_player, INT32_MIN, INT32_MAX, 5);
 	pos_to_coord(&result.from, &best_move->move.from);
 	pos_to_coord(&result.to, &best_move->move.to);
-	move_list_node_free(move_list);
+	free(best_move);
 	return result;
 }
