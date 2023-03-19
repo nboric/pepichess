@@ -41,13 +41,12 @@ void add_all_moves(struct ll_node* move_list, struct board* board, struct piece*
 }
 
 struct scored_move*
-predict_best_move_rec(struct board* board, struct move_pos previous_move, enum color current_player, double alpha, double beta, int max_depth)
+predict_best_move_rec(struct board* board, enum color current_player, double alpha, double beta, int max_depth)
 {
 	struct scored_move* result;
 	if (max_depth == 0)
 	{
 		result = malloc(sizeof(struct scored_move));
-		result->move = previous_move;
 		result->predicted_score = calc_score(board, current_player);
 		return result;
 	}
@@ -77,7 +76,7 @@ predict_best_move_rec(struct board* board, struct move_pos previous_move, enum c
 		move_piece(board2, &move_coord);
 
 		update_valid_moves(board2);
-		struct scored_move* next_move = predict_best_move_rec(board2, *move, next_player, -beta, -alpha, max_depth - 1);
+		struct scored_move* next_move = predict_best_move_rec(board2, next_player, -beta, -alpha, max_depth - 1);
 		board_free(board2);
 
 		double score;
@@ -119,8 +118,7 @@ predict_best_move_rec(struct board* board, struct move_pos previous_move, enum c
 struct move_coord predict_best_move(struct game_status* status)
 {
 	struct move_coord result;
-	struct move_pos empty_move;
-	struct scored_move* best_move = predict_best_move_rec(status->board, empty_move, status->current_player, INT32_MIN, INT32_MAX, 5);
+	struct scored_move* best_move = predict_best_move_rec(status->board, status->current_player, INT32_MIN, INT32_MAX, 5);
 	pos_to_coord(&result.from, &best_move->move.from);
 	pos_to_coord(&result.to, &best_move->move.to);
 	free(best_move);
