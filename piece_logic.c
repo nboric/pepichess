@@ -174,6 +174,51 @@ void move_validation_knight(struct board* board, struct piece* piece)
 	}
 }
 
+int is_castling_allowed(struct board* board, struct piece* king, struct piece* rook)
+{
+	if (king->has_moved || rook->has_moved)
+	{
+		return 0;
+	}
+	if (king->is_in_check)
+	{
+		return 0;
+	}
+	int king_dir = 1;
+	if (rook->pos.p[1] < king->pos.p[1])
+	{
+		king_dir = -1;
+	}
+	int step;
+	for (step = 1; step < 3; step++)
+	{
+		struct pos new_pos = (struct pos){ king->pos.p[0], king->pos.p[1] + step * king_dir };
+		if (!is_empty(board, &new_pos))
+		{
+			return 0;
+		}
+		struct move_pos move = (struct move_pos){ king->pos.p[0], king->pos.p[1], new_pos.p[0], new_pos.p[1] };
+		struct coord coord_from;
+		struct coord coord_to;
+		pos_to_coord(&coord_from, &move.from);
+		pos_to_coord(&coord_to, &move.to);
+		struct move_coord move_coord = (struct move_coord){ coord_from, coord_to };
+		if (move_puts_king_in_check(board, king->color, &move_coord))
+		{
+			return 0;
+		}
+	}
+	if (king_dir == -1)
+	{
+		struct pos new_pos = (struct pos){ rook->pos.p[0], rook->pos.p[1] + 1 };
+		if (!is_empty(board, &new_pos))
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
+
 void move_validation_king(struct board* board, struct piece* piece)
 {
 	for (int dir0 = -1; dir0 < 2; dir0++)
@@ -188,6 +233,26 @@ void move_validation_king(struct board* board, struct piece* piece)
 			if (is_empty_or_can_capture(board, &new_pos, piece))
 			{
 				set_valid(piece, &new_pos, 1);
+			}
+		}
+	}
+	// castling
+	if (!piece->has_moved && !piece->is_in_check)
+	{
+		for (int dir = -1; dir < 2; dir += 2)
+		{
+			struct piece* rook;
+			struct pos rook_pos = (struct pos){ piece->pos.p[0], piece->pos.p[1] + (dir == 1? 3: -4) };
+			if ((rook = board->squares[rook_pos.p[0]][rook_pos.p[1]].piece) != NULL)
+			{
+				if (rook->type == ROOK && rook->color == piece->color)
+				{
+					if (is_castling_allowed(board, piece, rook))
+					{
+						struct pos new_pos = (struct pos){ piece->pos.p[0], piece->pos.p[1] + dir * 2 };
+						set_valid(piece, &new_pos, 1);
+					}
+				}
 			}
 		}
 	}

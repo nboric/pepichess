@@ -16,6 +16,10 @@ void add_pieces_to_board(struct board* board, struct player* player)
 		struct pos* pos = &player->pieces[i]->pos;
 		board->squares[pos->p[0]][pos->p[1]].piece = player->pieces[i];
 		ll_add(board->active_pieces[player->id], player->pieces[i]);
+		if (player->pieces[i]->type == KING)
+		{
+			board->kings[player->id] = player->pieces[i];
+		}
 	}
 	update_valid_moves(board);
 }
@@ -25,8 +29,7 @@ struct piece* create_piece(enum color color, enum piece_id type, struct coord co
 	struct piece* piece = malloc(sizeof(struct piece));
 	piece->color = color;
 	piece->type = type;
-	piece->coord = coord;
-	coord_to_pos(&piece->pos, &piece->coord);
+	coord_to_pos(&piece->pos, &coord);
 
 	switch (type)
 	{

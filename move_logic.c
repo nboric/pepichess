@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "move_logic.h"
 
 int is_within_boundaries(struct pos* pos)
@@ -41,7 +42,48 @@ void update_is_giving_check(struct board* board, struct piece* piece)
 	}
 }
 
-double move_piece(struct board* board, struct move_coord* move)
+int move_did_put_king_in_check(struct board* board, enum color current_player)
+{
+	int result = 0;
+	int other_player = get_other_player(current_player);
+
+	for (struct ll_node* n = board->active_pieces[other_player]->next; n != NULL; n = n->next)
+	{
+		struct piece* piece = n->value;
+		if (piece->is_giving_check)
+		{
+			result = 1;
+			break;
+		}
+	}
+	return result;
+}
+
+struct piece* move_is_castling(struct board* board, struct piece* piece, struct move_coord* move_coord)
+{
+	if (piece->type != KING)
+	{
+		return 0;
+	}
+	struct move_pos move_pos;
+	coord_to_pos(&move_pos.from, &move_coord->from);
+	coord_to_pos(&move_pos.to, &move_coord->to);
+	if (move_pos.from.p[0] != move_pos.to.p[0])
+	{
+		return NULL;
+	}
+	if (move_pos.to.p[1] == move_pos.from.p[1] + 2)
+	{
+		return board->squares[move_pos.from.p[0]][move_pos.from.p[1] + 3].piece;
+	}
+	if (move_pos.to.p[1] == move_pos.from.p[1] - 2)
+	{
+		return board->squares[move_pos.from.p[0]][move_pos.from.p[1] - 4].piece;
+	}
+	return NULL;
+}
+
+void move_piece(struct board* board, struct move_coord* move)
 {
 	struct pos pos_from, pos_to;
 	coord_to_pos(&pos_from, &move->from);
@@ -54,20 +96,44 @@ double move_piece(struct board* board, struct move_coord* move)
 	board->squares[pos_to.p[0]][pos_to.p[1]].piece = piece;
 	board->squares[pos_from.p[0]][pos_from.p[1]].piece = NULL;
 
-	piece->coord = move->to;
 	piece->pos = pos_to;
 	piece->has_moved = 1;
+
+	struct piece* rook;
+
+	if ((rook = move_is_castling(board, piece, move)) != NULL)
+	{
+		struct pos rook_new_pos;
+		if (rook->pos.p[1] == 0)
+		{
+			rook_new_pos = (struct pos) {rook->pos.p[0], rook->pos.p[1] + 3};
+		}
+		else
+		{
+			rook_new_pos = (struct pos) {rook->pos.p[0], rook->pos.p[1] - 2};
+		}
+		board->squares[rook_new_pos.p[0]][rook_new_pos.p[1]].piece = rook;
+		board->squares[rook->pos.p[0]][rook->pos.p[1]].piece = NULL;
+
+		rook->pos = rook_new_pos;
+		rook->has_moved = 1;
+	}
+
+	update_valid_moves(board);
+
+	enum color other_player = get_other_player(piece->color);
+
+	board->kings[other_player]->is_in_check = move_did_put_king_in_check(board, piece->color);
 
 	if (piece_to != NULL)
 	{
 		struct ll_node* piece_node = ll_find(board->active_pieces[piece_to->color], piece_to);
 		ll_remove(piece_node);
-		return piece_to->capture_score;
+		free(piece_to);
 	}
-	return 0;
 }
 
-void update_valid_moves_piece(void *value, void *data)
+void update_valid_moves_piece(void* value, void* data)
 {
 	struct piece* piece = value;
 	struct board* board = data;
@@ -87,25 +153,14 @@ void update_valid_moves(struct board* board)
 	}
 }
 
-int move_puts_own_king_in_check(struct board* board, enum color current_player, struct move_coord* move)
+int move_puts_king_in_check(struct board* board, enum color current_player, struct move_coord* move)
 {
 	int result = 0;
 	struct board* board2 = board_copy(board);
 
 	move_piece(board2, move);
-	update_valid_moves(board2);
 
-	int other_player = get_other_player(current_player);
-
-	for (struct ll_node* n = board2->active_pieces[other_player]->next; n != NULL; n = n->next)
-	{
-		struct piece* piece = n->value;
-		if (piece->is_giving_check)
-		{
-			result = 1;
-			break;
-		}
-	}
+	result = move_did_put_king_in_check(board2, current_player);
 
 	board_free(board2);
 	return result;
@@ -152,7 +207,7 @@ int validate_move(struct game_status* status, struct board* board, struct move_c
 			.c[1], move->to.c[0], move->to.c[1]);
 		return 0;
 	}
-	if (move_puts_own_king_in_check(board, status->current_player, move))
+	if (move_puts_king_in_check(board, status->current_player, move))
 	{
 		printf("Can't move %s at %c%c to %c%c, king would be in check\n", piece_from->name, move->from.c[0], move->from
 			.c[1], move->to.c[0], move->to.c[1]);

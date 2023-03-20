@@ -28,7 +28,7 @@ void add_all_moves(struct ll_node* move_list, struct board* board, struct piece*
 				struct coord coord_to;
 				pos_to_coord(&coord_to, &pos_to);
 				struct move_coord move_coord = (struct move_coord){ coord_from, coord_to };
-				if (move_puts_own_king_in_check(board, piece->color, &move_coord))
+				if (move_puts_king_in_check(board, piece->color, &move_coord))
 				{
 					continue;
 				}
@@ -75,7 +75,6 @@ predict_best_move_rec(struct board* board, enum color current_player, double alp
 		struct board* board2 = board_copy(board);
 		move_piece(board2, &move_coord);
 
-		update_valid_moves(board2);
 		struct scored_move* next_move = predict_best_move_rec(board2, next_player, -beta, -alpha, max_depth - 1);
 		board_free(board2);
 
@@ -109,7 +108,6 @@ predict_best_move_rec(struct board* board, enum color current_player, double alp
 		scored_winner = malloc(sizeof(struct scored_move));
 		scored_winner->move = *winner;
 		scored_winner->predicted_score = best_score;
-		return scored_winner;
 	}
 	ll_free(move_list, free);
 	return scored_winner;

@@ -54,6 +54,19 @@ struct board* board_copy(struct board* board)
 	{
 		ll_apply(board2->active_pieces[i], piece_add_to_board, board2);
 	}
+	for (int i = 0; i < 2; i++)
+	{
+		for (struct ll_node* n = board->active_pieces[i]->next; n != NULL; n = n->next)
+		{
+			struct piece* piece = n->value;
+			if (piece->type == KING)
+			{
+				board2->kings[i] = piece;
+				break;
+			}
+		}
+	}
+
 	return board2;
 }
 

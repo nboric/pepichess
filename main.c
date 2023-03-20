@@ -88,7 +88,6 @@ int main()
 			move_valid = validate_move(&game_status, board, &move);
 		}
 		move_piece(board, &move);
-		update_valid_moves(board);
 		game_status.current_player = get_other_player(game_status.current_player);
 	}
 	return 0;
