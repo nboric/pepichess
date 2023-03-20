@@ -66,6 +66,7 @@ void ll_remove(struct ll_node* node)
 	{
 		next->prev = prev;
 	}
+    free(node);
 }
 
 void ll_free(struct ll_node* head, void (* val_free_func)(void*))
@@ -78,6 +79,7 @@ void ll_free(struct ll_node* head, void (* val_free_func)(void*))
 		free(n);
 		n = next;
 	}
+    free(head);
 }
 
 void ll_apply(struct ll_node* head, void (* val_apply_func)(void*, void*), void *data)
