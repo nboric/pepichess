@@ -57,6 +57,7 @@ struct move_coord get_input()
 
 	char c1, c2;
 	char i1, i2;
+    c1 = c2 = i1 = i2 = 0;
 	scanf(" %c%c%c%c", &c1, &i1, &c2, &i2);
 
 	result.from = (struct coord){ toupper(c1), i1 };
