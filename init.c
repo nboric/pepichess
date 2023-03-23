@@ -24,7 +24,7 @@ void add_pieces_to_board(struct board* board, struct player* player)
 	update_valid_moves(board);
 }
 
-struct piece* create_piece(enum color color, enum piece_id type, struct coord coord)
+struct piece* piece_create(enum color color, enum piece_id type, struct coord coord)
 {
 	struct piece* piece = malloc(sizeof(struct piece));
 	piece->color = color;
@@ -99,38 +99,38 @@ struct piece* create_piece(enum color color, enum piece_id type, struct coord co
 	return piece;
 }
 
-void init_player(struct player* player, int color)
+void player_init(struct player* player, int color)
 {
 	int n = 0;
 	player->id = color;
 	if (player->id == WHITE)
 	{
-		player->pieces[n++] = create_piece(WHITE, ROOK, (struct coord){ 'A', '1' });
-		player->pieces[n++] = create_piece(WHITE, KNIGHT, (struct coord){ 'B', '1' });
-		player->pieces[n++] = create_piece(WHITE, BISHOP, (struct coord){ 'C', '1' });
-		player->pieces[n++] = create_piece(WHITE, QUEEN, (struct coord){ 'D', '1' });
-		player->pieces[n++] = create_piece(WHITE, KING, (struct coord){ 'E', '1' });
-		player->pieces[n++] = create_piece(WHITE, BISHOP, (struct coord){ 'F', '1' });
-		player->pieces[n++] = create_piece(WHITE, KNIGHT, (struct coord){ 'G', '1' });
-		player->pieces[n++] = create_piece(WHITE, ROOK, (struct coord){ 'H', '1' });
+		player->pieces[n++] = piece_create(WHITE, ROOK, (struct coord){ 'A', '1' });
+		player->pieces[n++] = piece_create(WHITE, KNIGHT, (struct coord){ 'B', '1' });
+		player->pieces[n++] = piece_create(WHITE, BISHOP, (struct coord){ 'C', '1' });
+		player->pieces[n++] = piece_create(WHITE, QUEEN, (struct coord){ 'D', '1' });
+		player->pieces[n++] = piece_create(WHITE, KING, (struct coord){ 'E', '1' });
+		player->pieces[n++] = piece_create(WHITE, BISHOP, (struct coord){ 'F', '1' });
+		player->pieces[n++] = piece_create(WHITE, KNIGHT, (struct coord){ 'G', '1' });
+		player->pieces[n++] = piece_create(WHITE, ROOK, (struct coord){ 'H', '1' });
 		for (int i = 0; i < 8; i++)
 		{
-			player->pieces[n++] = create_piece(WHITE, PAWN, (struct coord){ 'A' + i, '2' });
+			player->pieces[n++] = piece_create(WHITE, PAWN, (struct coord){ 'A' + i, '2' });
 		}
 	}
 	else
 	{
-		player->pieces[n++] = create_piece(BLACK, ROOK, (struct coord){ 'A', '8' });
-		player->pieces[n++] = create_piece(BLACK, KNIGHT, (struct coord){ 'B', '8' });
-		player->pieces[n++] = create_piece(BLACK, BISHOP, (struct coord){ 'C', '8' });
-		player->pieces[n++] = create_piece(BLACK, QUEEN, (struct coord){ 'D', '8' });
-		player->pieces[n++] = create_piece(BLACK, KING, (struct coord){ 'E', '8' });
-		player->pieces[n++] = create_piece(BLACK, BISHOP, (struct coord){ 'F', '8' });
-		player->pieces[n++] = create_piece(BLACK, KNIGHT, (struct coord){ 'G', '8' });
-		player->pieces[n++] = create_piece(BLACK, ROOK, (struct coord){ 'H', '8' });
+		player->pieces[n++] = piece_create(BLACK, ROOK, (struct coord){ 'A', '8' });
+		player->pieces[n++] = piece_create(BLACK, KNIGHT, (struct coord){ 'B', '8' });
+		player->pieces[n++] = piece_create(BLACK, BISHOP, (struct coord){ 'C', '8' });
+		player->pieces[n++] = piece_create(BLACK, QUEEN, (struct coord){ 'D', '8' });
+		player->pieces[n++] = piece_create(BLACK, KING, (struct coord){ 'E', '8' });
+		player->pieces[n++] = piece_create(BLACK, BISHOP, (struct coord){ 'F', '8' });
+		player->pieces[n++] = piece_create(BLACK, KNIGHT, (struct coord){ 'G', '8' });
+		player->pieces[n++] = piece_create(BLACK, ROOK, (struct coord){ 'H', '8' });
 		for (int i = 0; i < 8; i++)
 		{
-			player->pieces[n++] = create_piece(BLACK, PAWN, (struct coord){ 'A' + i, '7' });
+			player->pieces[n++] = piece_create(BLACK, PAWN, (struct coord){ 'A' + i, '7' });
 		}
 	}
 }

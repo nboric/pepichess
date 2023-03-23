@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "move_logic.h"
+#include "init.h"
 
 int is_within_boundaries(struct pos* pos)
 {
@@ -63,7 +64,7 @@ struct piece* move_is_castling(struct board* board, struct piece* piece, struct 
 {
 	if (piece->type != KING)
 	{
-		return 0;
+		return NULL;
 	}
 	struct move_pos move_pos;
 	coord_to_pos(&move_pos.from, &move_coord->from);
@@ -79,6 +80,22 @@ struct piece* move_is_castling(struct board* board, struct piece* piece, struct 
 	if (move_pos.to.p[1] == move_pos.from.p[1] - 2)
 	{
 		return board->squares[move_pos.from.p[0]][move_pos.from.p[1] - 4].piece;
+	}
+	return NULL;
+}
+
+struct piece* move_is_promotion(struct board* board, struct piece* piece, struct move_coord* move_coord)
+{
+	if (piece->type != PAWN)
+	{
+		return NULL;
+	}
+	struct move_pos move_pos;
+	coord_to_pos(&move_pos.from, &move_coord->from);
+	coord_to_pos(&move_pos.to, &move_coord->to);
+	if ((piece->color == WHITE && move_pos.to.p[0] == 0) || (piece->color == BLACK && move_pos.to.p[0] == 7))
+	{
+		return piece;
 	}
 	return NULL;
 }
@@ -100,23 +117,34 @@ void move_piece(struct board* board, struct move_coord* move)
 	piece->has_moved = 1;
 
 	struct piece* rook;
-
 	if ((rook = move_is_castling(board, piece, move)) != NULL)
 	{
 		struct pos rook_new_pos;
 		if (rook->pos.p[1] == 0)
 		{
-			rook_new_pos = (struct pos) {rook->pos.p[0], rook->pos.p[1] + 3};
+			rook_new_pos = (struct pos){ rook->pos.p[0], rook->pos.p[1] + 3 };
 		}
 		else
 		{
-			rook_new_pos = (struct pos) {rook->pos.p[0], rook->pos.p[1] - 2};
+			rook_new_pos = (struct pos){ rook->pos.p[0], rook->pos.p[1] - 2 };
 		}
 		board->squares[rook_new_pos.p[0]][rook_new_pos.p[1]].piece = rook;
 		board->squares[rook->pos.p[0]][rook->pos.p[1]].piece = NULL;
 
 		rook->pos = rook_new_pos;
 		rook->has_moved = 1;
+	}
+	struct piece* pawn;
+	if ((pawn = move_is_promotion(board, piece, move)) != NULL)
+	{
+		// only allow promotion to queen for now
+		struct piece* queen = piece_create(pawn->color, QUEEN, move->to);
+		struct ll_node* active_pieces = board->active_pieces[pawn->color];
+		struct ll_node* piece_node = ll_find(active_pieces, pawn);
+		ll_remove(piece_node);
+		free(pawn);
+		board->squares[pos_to.p[0]][pos_to.p[1]].piece = queen;
+		ll_add(active_pieces, queen);
 	}
 
 	update_valid_moves(board);

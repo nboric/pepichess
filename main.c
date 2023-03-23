@@ -100,9 +100,9 @@ int main()
 	srand(time(NULL));
 	struct board* board = board_create();
 	struct game_status game_status = { .ended = 0, .current_player = WHITE, .board = board };
-	init_player(&game_status.players[0], WHITE);
+	player_init(&game_status.players[0], WHITE);
 	add_pieces_to_board(board, &game_status.players[0]);
-	init_player(&game_status.players[1], BLACK);
+	player_init(&game_status.players[1], BLACK);
 	add_pieces_to_board(board, &game_status.players[1]);
 
 	while (!game_status.ended)
