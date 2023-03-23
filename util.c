@@ -21,7 +21,7 @@ struct ll_node* ll_copy(struct ll_node* head, void* (* val_copy_func)(void* valu
 {
 	struct ll_node* new_head = ll_node_create();
 	struct ll_node* n = head->next;
-	while(n != NULL)
+	while (n != NULL)
 	{
 		void* val_copy = val_copy_func(n->value);
 		// using ll_add will reverse the order
@@ -66,7 +66,7 @@ void ll_remove(struct ll_node* node)
 	{
 		next->prev = prev;
 	}
-    free(node);
+	free(node);
 }
 
 void ll_free(struct ll_node* head, void (* val_free_func)(void*))
@@ -75,14 +75,17 @@ void ll_free(struct ll_node* head, void (* val_free_func)(void*))
 	while (n != NULL)
 	{
 		struct ll_node* next = n->next;
-		val_free_func(n->value);
+		if (val_free_func != NULL)
+		{
+			val_free_func(n->value);
+		}
 		free(n);
 		n = next;
 	}
-    free(head);
+	free(head);
 }
 
-void ll_apply(struct ll_node* head, void (* val_apply_func)(void*, void*), void *data)
+void ll_apply(struct ll_node* head, void (* val_apply_func)(void*, void*), void* data)
 {
 	for (struct ll_node* n = head->next; n != NULL; n = n->next)
 	{

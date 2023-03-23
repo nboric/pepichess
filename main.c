@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
 #include "common.h"
 #include "move_logic.h"
 #include "init.h"
@@ -52,7 +54,6 @@ void print_board(struct board* board)
 	printf("\n");
 }
 
-
 enum input_result
 {
 	INPUT_ERROR = -1,
@@ -96,6 +97,7 @@ int get_input(struct move_coord* move)
 
 int main()
 {
+	srand(time(NULL));
 	struct board* board = board_create();
 	struct game_status game_status = { .ended = 0, .current_player = WHITE, .board = board };
 	init_player(&game_status.players[0], WHITE);
@@ -117,8 +119,10 @@ int main()
 				first = 0;
 				best_move = predict_best_move(&game_status);
 			}
-			printf("Hint: I would play %c%c->%c%c\n", best_move.from.c[0], best_move.from.c[1], best_move.to.c[0], best_move.to.c[1]);
-			printf("Player %s, enter move, or press enter to accept suggested move:\n", game_status.current_player == WHITE ? "white" : "black");
+			printf("Hint: I would play %c%c->%c%c\n", best_move.from.c[0], best_move.from.c[1], best_move.to
+				.c[0], best_move.to.c[1]);
+			printf("Player %s, enter move, or press enter to accept suggested move:\n",
+				game_status.current_player == WHITE ? "white" : "black");
 			enum input_result result = get_input(&move);
 			if (result == INPUT_ERROR)
 			{
